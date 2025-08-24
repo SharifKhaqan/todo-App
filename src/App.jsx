@@ -1,9 +1,15 @@
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 function App() {
   return (
-    <>
-      <h1>Todo-App</h1>
-    </>
-  )
+   <>
+   <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+    </Routes>
+   </>  
+  );
 }
 
-export default App
+export default App;
