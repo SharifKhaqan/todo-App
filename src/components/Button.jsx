@@ -1,12 +1,13 @@
 import { Button } from "@mui/material";
 
-export default function CustomButton({ text, type = "button", onClick }) {
+export default function CustomButton({ text, type = "button", onClick, disabled = false }) {
   return (
     <Button
       fullWidth
       variant="contained"
       type={type}
       onClick={onClick}
+      disabled={disabled}   
       sx={{
         mt: 4,
         mb: 3,
