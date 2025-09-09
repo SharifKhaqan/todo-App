@@ -14,7 +14,7 @@ export default function TodoPage() {
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("latest");
   const [message, setMessage] = useState(null);
-  const {  logout, loading } = useAuth();
+  const { todos, setTodos, logout, loading } = useAuth();
   const navigate = useNavigate();
 
   // Reset page when search changes
