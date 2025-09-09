@@ -6,7 +6,7 @@ import Signup from "./pages/Register";
 import TodoPage from "./pages/Todos"; 
 import AdminPage from "./pages/AdminPage"; 
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
       <Routes>
@@ -26,5 +26,3 @@ function App() {
     </AuthProvider>
   );
 }
-
-export default App;

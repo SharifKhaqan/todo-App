@@ -7,7 +7,6 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 
 export default function TodoPage() {
-  const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const [editingIndex, setEditingIndex] = useState(null);
   const [editingText, setEditingText] = useState("");
@@ -65,7 +64,7 @@ export default function TodoPage() {
   // Enable edit mode
   const handleEdit = (index) => {
     setEditingIndex(index);
-    setEditingText(todos[index]);
+    setEditingText(todos[index].task || "");
   };
 
   // Save edited todo

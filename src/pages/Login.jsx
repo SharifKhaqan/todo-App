@@ -23,7 +23,10 @@ export default function Login() {
     remember: false,
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
   const handleClickShowPassword = () => setShowPassword((s) => !s);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -84,11 +87,9 @@ export default function Login() {
 
   return (
     <Box sx={{ width: "100vw", height: "100vh", m: 0, p: 0 }}>
-      {" "}
-      <CssBaseline />{" "}
+      <CssBaseline />
       <Grid container sx={{ height: "100%" }}>
-        {" "}
-        {/* Left Section */}{" "}
+        {/* Left Section */}
         <Grid
           item
           xs={false}
@@ -105,7 +106,6 @@ export default function Login() {
             width: "53%",
           }}
         >
-          {" "}
           <Box
             sx={{
               display: "flex",
@@ -116,7 +116,6 @@ export default function Login() {
               px: 2,
             }}
           >
-            {" "}
             <Box
               component="img"
               src={loginPicture}
@@ -127,9 +126,8 @@ export default function Login() {
                 mb: 2,
                 userSelect: "none",
               }}
-            />{" "}
+            />
             <Typography variant="body">
-              {" "}
               Manage your tasks efficiently and stay organized. Sign in to
               track, add, and complete your to-dos effortlessly.
             </Typography>
@@ -177,7 +175,6 @@ export default function Login() {
             >
               ToDo-App
             </Typography>
-
             <Typography
               variant="h6"
               sx={{
@@ -191,7 +188,6 @@ export default function Login() {
             >
               Sign in to your account
             </Typography>
-
             <Typography
               variant="body2"
               sx={{
@@ -279,7 +275,6 @@ export default function Login() {
                   mt: 1,
                 }}
               >
-                {" "}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -290,7 +285,7 @@ export default function Login() {
                     />
                   }
                   label="Remember me"
-                />{" "}
+                />
                 <Link
                   href="#"
                   underline="hover"
@@ -316,10 +311,9 @@ export default function Login() {
                 align="center"
                 sx={{ fontWeight: 400, fontSize: "16px", mt: 2 }}
               >
-                {" "}
                 Do not have account yet?{" "}
                 <Link
-                  href="/register"
+                  href="/signup"
                   underline="hover"
                   sx={{ fontWeight: 500, fontSize: "16px" }}
                 >
@@ -330,7 +324,6 @@ export default function Login() {
           </Box>
         </Grid>
       </Grid>
-
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

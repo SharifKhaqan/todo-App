@@ -1,8 +1,11 @@
 import { useState } from "react";
-import {Box,Grid,Typography,TextField,InputAdornment,IconButton,CssBaseline,FormControlLabel,Checkbox} from "@mui/material";
+import {Box,Grid,Typography,TextField,InputAdornment,IconButton,CssBaseline,FormControlLabel,Checkbox,Snackbar,Alert,
+} from "@mui/material";
 import {Email,Lock,Person,Visibility,VisibilityOff,} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import signupPicture from "../assets/signupPicture.png";
 import CustomButton from "../components/Button";
+import { signup } from "../services/auth";
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,15 +15,28 @@ export default function Signup() {
     email: "",
     password: "",
     confirmPassword: "",
+    remember: false,
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const navigate = useNavigate();
+
   const handleClickShowPassword = () => setShowPassword((s) => !s);
   const handleClickShowConfirmPassword = () =>
     setShowConfirmPassword((s) => !s);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   // Validate form fields
@@ -31,7 +47,9 @@ export default function Signup() {
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       tempErrors.email = "Email is invalid";
     if (!formData.password) tempErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword)
+    if (!formData.confirmPassword)
+      tempErrors.confirmPassword = "Confirm password is required";
+    else if (formData.password !== formData.confirmPassword)
       tempErrors.confirmPassword = "Passwords do not match";
     if (!formData.remember) tempErrors.remember = "You must agree to the terms";
     setErrors(tempErrors);
@@ -75,11 +93,9 @@ export default function Signup() {
 
   return (
     <Box sx={{ width: "100vw", height: "100vh", m: 0, p: 0 }}>
-      {" "}
-      <CssBaseline />{" "}
+      <CssBaseline />
       <Grid container sx={{ height: "100%" }}>
-        {" "}
-        {/* Left Section */}{" "}
+        {/* Left Section */}
         <Grid
           item
           xs={false}
@@ -96,7 +112,6 @@ export default function Signup() {
             width: "53%",
           }}
         >
-          {" "}
           <Box
             sx={{
               display: "flex",
@@ -107,7 +122,6 @@ export default function Signup() {
               px: 2,
             }}
           >
-            {" "}
             <Box
               component="img"
               src={signupPicture}
@@ -179,9 +193,8 @@ export default function Signup() {
                 color: "#000",
               }}
             >
-              {" "}
-              Create new account{" "}
-            </Typography>{" "}
+              Create new account
+            </Typography>
             <Typography
               variant="body2"
               sx={{
