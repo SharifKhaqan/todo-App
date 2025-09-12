@@ -8,12 +8,14 @@ export async function getTodos(search = "", page = 1, sort = "latest") {
 
   const { data } = await api.get(endpoint);
 
-  // Return backend response
+  // return totalTodos also
   return {
     todos: data.data || [],
+    totalTodos: data.totalTodos || 0,
     message: data.message || null,
   };
 }
+
 
 // Create a new todo
 export async function addTodo(task) {
@@ -42,20 +44,27 @@ export async function deleteTodo(id) {
 }
 
 // Get all users (admin only)
-export async function getAllUsers() {
-  console.log("Fetching all users (admin)...");
-  const { data } = await api.get("/admin/user");
-  return data.users || []; 
+export async function getAllUsers(search = "", page = 1, limit = 5, sort = "latest") {
+  console.log("Fetching all users (admin)... search:", search, "page:", page, "sort:", sort);
+
+  let endpoint = `/admin/user?page=${page}&limit=${limit}&sort=${sort}`;
+  if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+  const { data } = await api.get(endpoint);
+  return data.users || [];
 }
 
-export async function getAllTodos(page = 1) {
-  console.log("Fetching all todos (admin)... page:", page);
-  const { data } = await api.get(`/admin/todo?page=${page}`);
+// Get all todos (admin only)
+export async function getAllTodos(search = "", page = 1, limit = 5, sort = "latest") {
+  console.log("Fetching all todos (admin)... search:", search, "page:", page, "limit:", limit, "sort:", sort);
+  let endpoint = `/admin/todo?page=${page}&limit=${limit}&sort=${sort}`;
+  if (search) endpoint += `&search=${encodeURIComponent(search)}`;
+  const { data } = await api.get(endpoint);
   return {
     totalTodos: data.totalTodos || 0,
     todos: data.data || [],
   };
 }
+
 
 // Get daily completed todos stats (admin)
 export async function getCompletedDailyStats() {
