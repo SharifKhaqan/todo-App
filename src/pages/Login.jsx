@@ -1,11 +1,12 @@
 import { useState } from "react";
-import {Box,Grid,Typography,TextField,InputAdornment,IconButton,Checkbox,FormControlLabel,Link,CssBaseline,Snackbar,
-  Alert,} from "@mui/material";
+import {Box,Grid,Typography,TextField,InputAdornment,IconButton,Checkbox,FormControlLabel,Link,CssBaseline,
+  Snackbar,Alert,} from "@mui/material";
 import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import loginPicture from "../assets/loginpicture.png";
 import CustomButton from "../components/Button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { jwtDecode } from "jwt-decode";
 
 export default function Login() {
   const [snackbar, setSnackbar] = useState({
@@ -13,10 +14,8 @@ export default function Login() {
     message: "",
     severity: "success",
   });
-
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -34,8 +33,10 @@ export default function Login() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    if (loading) setLoading(false);
   };
 
+  //Validate form fields
   const validate = () => {
     let tempErrors = {};
     if (!formData.email) tempErrors.email = "Email is required";
@@ -46,12 +47,12 @@ export default function Login() {
     return Object.keys(tempErrors).length === 0;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
     setLoading(true);
-
     try {
       const result = await login({
         email: formData.email,
@@ -64,8 +65,13 @@ export default function Login() {
           message: "Login successful! Redirecting...",
           severity: "success",
         });
+
+        const token = localStorage.getItem("token");
+        const decoded = token ? jwtDecode(token) : null;
+
         setTimeout(() => {
-          navigate("/"); // redirect to Todos page after success
+          if (decoded?.role === "admin") navigate("/admin");
+          else navigate("/");
         }, 1000);
       }
     } catch (err) {
@@ -74,13 +80,7 @@ export default function Login() {
         err.response?.data?.message ||
         err.message ||
         "Invalid email or password";
-
-      setSnackbar({
-        open: true,
-        message: errorMsg,
-        severity: "error",
-      });
-    } finally {
+      setSnackbar({ open: true, message: errorMsg, severity: "error" });
       setLoading(false);
     }
   };
@@ -92,10 +92,13 @@ export default function Login() {
         {/* Left Section */}
         <Grid
           item
-          xs={7}
+          xs={false}
+          sm={false}
+          md={false}
+          lg={7}
           sx={{
             background: "linear-gradient(180deg, #4A9DE0, #0B3B95)",
-            display: "flex",
+            display: { xs: "none", sm: "none", md: "none", lg: "flex" },
             alignItems: "center",
             justifyContent: "center",
             color: "white",
@@ -131,33 +134,56 @@ export default function Login() {
           </Box>
         </Grid>
 
-        {/* Right Section */}
+        {/* Right Form Section */}
         <Grid
           item
-          xs={5}
+          xs={12}
+          sm={12}
+          md={12}
+          lg={5}
           sx={{
             display: "flex",
-            alignItems: "start",
+            alignItems: {
+              xs: "flex-start",
+              sm: "flex-start",
+              md: "flex-start",
+              lg: "center",
+            },
             justifyContent: "center",
-            pl: 13,
+            pl: { xs: 2, sm: 20, md: 32, lg: 10 },
+            pr: { xs: 2, sm: 4, md: 0, lg: 0 },
+            pt: { xs: 2, sm: 3, md: 6, lg: 4 },
           }}
         >
-          <Box sx={{ width: "100%", maxWidth: "100%", p: 5 }}>
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 500,
+              p: { xs: 2, sm: 3, md: 6, lg: 5 },
+              mx: "auto",
+            }}
+          >
             <Typography
               variant="h5"
-              sx={{ position: "relative", bottom: 28, right: 130, pl: 2 }}
+              sx={{
+                mb: 2,
+                pl: { xs: 0, lg: 2 },
+                textAlign: "left",
+                mt: { xs: 0, sm: 0, md: -4, lg: -6 },
+                position: "relative",
+              }}
             >
               ToDo-App
             </Typography>
             <Typography
               variant="h6"
               sx={{
-                mt: 3,
+                mt: 2,
                 textAlign: "center",
                 fontWeight: 500,
-                fontSize: "32px",
-                lineHeight: "42px",
-                color: "#000000",
+                fontSize: { xs: "24px", sm: "28px", md: "32px" },
+                lineHeight: { xs: "32px", sm: "38px", md: "42px" },
+                color: "#000",
               }}
             >
               Sign in to your account
@@ -176,66 +202,77 @@ export default function Login() {
               Welcome back! Please enter your details
             </Typography>
 
-            <Box component="form" onSubmit={handleSubmit}>
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                <TextField
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={Boolean(errors.email)}
-                  helperText={errors.email}
-                  margin="normal"
-                  sx={{
-                    width: "400px",
-                    backgroundColor: "white",
-                    "& .MuiOutlinedInput-root": { borderRadius: "12px" },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email />
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
+            {/* Login Form */}
+            <Box
+              component="form"
+              onSubmit={handleSubmit}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              <TextField
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                error={Boolean(errors.email)}
+                helperText={errors.email}
+                margin="normal"
+                sx={{
+                  width: "400px",
+                  maxWidth: "100%",
+                  backgroundColor: "white",
+                  "& .MuiOutlinedInput-root": { borderRadius: "12px" },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email />
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
-              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                <TextField
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleChange}
-                  error={Boolean(errors.password)}
-                  helperText={errors.password}
-                  margin="normal"
-                  sx={{
-                    width: "400px",
-                    backgroundColor: "white",
-                    "& .MuiOutlinedInput-root": { borderRadius: "16px" },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton onClick={handleClickShowPassword} edge="end">
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-              </Box>
+              <TextField
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                error={Boolean(errors.password)}
+                helperText={errors.password}
+                margin="normal"
+                sx={{
+                  width: "400px",
+                  maxWidth: "100%",
+                  backgroundColor: "white",
+                  "& .MuiOutlinedInput-root": { borderRadius: "16px" },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton onClick={handleClickShowPassword} edge="end">
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
 
               <Box
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 0 },
+                  width: "100%",
+                  mt: 1,
                 }}
               >
                 <FormControlLabel
@@ -266,6 +303,7 @@ export default function Login() {
               <CustomButton
                 text={loading ? "Logging in..." : "Login"}
                 type="submit"
+                disabled={loading}
               />
 
               <Typography

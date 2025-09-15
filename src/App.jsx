@@ -1,9 +1,10 @@
-import { Routes,Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./routes/RequireAuth"; 
 import Login from "./pages/Login";
 import Signup from "./pages/Register"; 
 import TodoPage from "./pages/Todos"; 
+import AdminPage from "./pages/AdminPage"; 
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         {/* Protected routes */}
         <Route element={<RequireAuth />}>
           <Route path="/" element={<TodoPage />} />
+          <Route path="/admin" element={<AdminPage />} /> 
         </Route>
 
         {/* Catch all - redirect to login */}
