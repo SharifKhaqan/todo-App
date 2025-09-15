@@ -14,21 +14,23 @@ export default function TodoPage() {
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("latest");
   const [message, setMessage] = useState(null);
+  const [totalTodos, setTotalTodos] = useState(0); 
   const { todos, setTodos, logout, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Reset page when search changes
+  // Reset to first page whenever search changes
   useEffect(() => setPage(1), [search]);
 
-  // Fetch todos whenever search, page, or sortOrder changes
+  // Fetch todos when filters (search, page, sortOrder) change
   useEffect(() => {
     const fetchTodos = async () => {
       try {
         const result = await getTodosApi(search, page, sortOrder);
         setTodos(result.todos);
+        setTotalTodos(result.totalTodos || 0);
         setMessage(result.message || null);
       } catch (err) {
-        console.error("❌ Failed to fetch todos:", err);
+        console.error("Failed to fetch todos:", err);
       }
     };
     fetchTodos();
@@ -42,6 +44,7 @@ export default function TodoPage() {
       setNewTodo("");
       const result = await getTodosApi(search, page, sortOrder);
       setTodos(result.todos);
+      setTotalTodos(result.totalTodos || 0);
       setMessage(result.message || null);
     } catch (err) {
       console.error("Failed to add todo:", err);
@@ -55,6 +58,7 @@ export default function TodoPage() {
       await deleteTodoApi(todoId);
       const result = await getTodosApi(search, page, sortOrder);
       setTodos(result.todos);
+      setTotalTodos(result.totalTodos || 0);
       setMessage(result.message || null);
     } catch (err) {
       console.error("Failed to delete todo:", err);
@@ -77,13 +81,14 @@ export default function TodoPage() {
       setEditingText("");
       const result = await getTodosApi(search, page, sortOrder);
       setTodos(result.todos);
+      setTotalTodos(result.totalTodos || 0);
       setMessage(result.message || null);
     } catch (err) {
       console.error("Failed to update todo:", err);
     }
   };
 
-  // Toggle todo status 
+  // Toggle todo status (completed / pending)
   const handleToggleStatus = async (index) => {
     const todoId = todos[index]._id || todos[index].id;
     const newStatus = todos[index].status === "completed" ? "pending" : "completed";
@@ -95,12 +100,12 @@ export default function TodoPage() {
     try {
       await updateTodoStatusApi(todoId, newStatus);
     } catch (err) {
-      console.error("❌ Failed to update status (rolling back):", err);
+      console.error("Failed to update status (rolling back):", err);
       setTodos(prev);
     }
   };
 
-  
+  // Handle logout
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -119,9 +124,14 @@ export default function TodoPage() {
       />
 
       <Container maxWidth="sm" sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 6 }}>
-        <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold", color: "#000" }}>My Todos</Typography>
+        <Typography variant="h5" sx={{ mb: 1, fontWeight: "bold", color: "#000" }}>
+          My Todos
+        </Typography>
+        <Typography variant="body1" sx={{ mb: 3, fontWeight: 500 }}>
+          Total Todos: {totalTodos}
+        </Typography>
 
-        
+        {/* Add New Todo Section */}
         <Box sx={{ display: "flex", gap: 2, width: "100%", mb: 2 }}>
           <TextField
             fullWidth
@@ -139,7 +149,7 @@ export default function TodoPage() {
           </Button>
         </Box>
 
-        
+        {/* Todo List */}
         {todos.length > 0 ? (
           <List sx={{ width: "100%" }}>
             {todos.map((todo, index) => (
@@ -168,7 +178,7 @@ export default function TodoPage() {
           </Typography>
         )}
 
-        
+        {/* Pagination */}
         <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2, width: "100%" }}>
           <Button variant="outlined" disabled={page === 1} onClick={() => setPage((prev) => Math.max(prev - 1, 1))}>Back</Button>
           <Button variant="outlined" disabled={todos.length < 5} onClick={() => setPage((prev) => prev + 1)}>Next</Button>
