@@ -1,10 +1,22 @@
 import { useState } from "react";
-import {Box,Grid,Typography,TextField,InputAdornment,IconButton,Checkbox,FormControlLabel,Link,CssBaseline} from "@mui/material";
+import {Box,Grid,Typography,TextField,InputAdornment,IconButton,Checkbox,FormControlLabel,Link,CssBaseline,Snackbar,
+  Alert,} from "@mui/material";
 import { Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
 import loginPicture from "../assets/loginpicture.png";
 import CustomButton from "../components/Button";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -12,7 +24,10 @@ export default function Login() {
     remember: false,
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
   const handleClickShowPassword = () => setShowPassword((s) => !s);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -20,7 +35,7 @@ export default function Login() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-  
+
   const validate = () => {
     let tempErrors = {};
     if (!formData.email) tempErrors.email = "Email is required";
@@ -30,20 +45,51 @@ export default function Login() {
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
-  
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) console.log("Form submitted", formData);
+    if (!validate()) return;
+
+    setLoading(true);
+
+    try {
+      const result = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (result.success) {
+        setSnackbar({
+          open: true,
+          message: "Login successful! Redirecting...",
+          severity: "success",
+        });
+        setTimeout(() => {
+          navigate("/"); // redirect to Todos page after success
+        }, 1000);
+      }
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Invalid email or password";
+
+      setSnackbar({
+        open: true,
+        message: errorMsg,
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  
+
   return (
     <Box sx={{ width: "100vw", height: "100vh", m: 0, p: 0 }}>
-      {" "}
-      <CssBaseline />{" "}
+      <CssBaseline />
       <Grid container sx={{ height: "100%" }}>
-        {" "}
-        {/* Left Section */}{" "}
+        {/* Left Section */}
         <Grid
           item
           xs={7}
@@ -57,7 +103,6 @@ export default function Login() {
             width: "53%",
           }}
         >
-          {" "}
           <Box
             sx={{
               display: "flex",
@@ -68,7 +113,6 @@ export default function Login() {
               px: 2,
             }}
           >
-            {" "}
             <Box
               component="img"
               src={loginPicture}
@@ -79,16 +123,15 @@ export default function Login() {
                 mb: 2,
                 userSelect: "none",
               }}
-            />{" "}
+            />
             <Typography variant="body">
-              {" "}
               Manage your tasks efficiently and stay organized. Sign in to
-              track, add, and complete your to-dos effortlessly.{" "}
-            </Typography>{" "}
-          </Box>{" "}
-        </Grid>{" "}
-        
-        {/* Right Section */}{" "}
+              track, add, and complete your to-dos effortlessly.
+            </Typography>
+          </Box>
+        </Grid>
+
+        {/* Right Section */}
         <Grid
           item
           xs={5}
@@ -99,16 +142,13 @@ export default function Login() {
             pl: 13,
           }}
         >
-          {" "}
           <Box sx={{ width: "100%", maxWidth: "100%", p: 5 }}>
-            {" "}
             <Typography
               variant="h5"
               sx={{ position: "relative", bottom: 28, right: 130, pl: 2 }}
             >
-              {" "}
-              ToDo-App{" "}
-            </Typography>{" "}
+              ToDo-App
+            </Typography>
             <Typography
               variant="h6"
               sx={{
@@ -120,9 +160,8 @@ export default function Login() {
                 color: "#000000",
               }}
             >
-              {" "}
-              Sign in to your account{" "}
-            </Typography>{" "}
+              Sign in to your account
+            </Typography>
             <Typography
               variant="body2"
               sx={{
@@ -134,13 +173,11 @@ export default function Login() {
                 textAlign: "center",
               }}
             >
-              {" "}
-              Welcome back! Please enter your details{" "}
-            </Typography>{" "}
+              Welcome back! Please enter your details
+            </Typography>
+
             <Box component="form" onSubmit={handleSubmit}>
-              {" "}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="email"
                   value={formData.email}
@@ -156,15 +193,14 @@ export default function Login() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Email />{" "}
+                        <Email />
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
+                />
+              </Box>
+
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="password"
                   type={showPassword ? "text" : "password"}
@@ -181,29 +217,20 @@ export default function Login() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Lock />{" "}
+                        <Lock />
                       </InputAdornment>
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
-                        {" "}
-                        <IconButton
-                          onClick={handleClickShowPassword}
-                          edge="end"
-                        >
-                          {" "}
-                          {showPassword ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}{" "}
-                        </IconButton>{" "}
+                        <IconButton onClick={handleClickShowPassword} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
+                />
+              </Box>
+
               <Box
                 sx={{
                   display: "flex",
@@ -211,7 +238,6 @@ export default function Login() {
                   alignItems: "center",
                 }}
               >
-                {" "}
                 <FormControlLabel
                   control={
                     <Checkbox
@@ -222,7 +248,7 @@ export default function Login() {
                     />
                   }
                   label="Remember me"
-                />{" "}
+                />
                 <Link
                   href="#"
                   underline="hover"
@@ -233,31 +259,48 @@ export default function Login() {
                     color: "#4A90E2",
                   }}
                 >
-                  {" "}
-                  Forgot Password?{" "}
-                </Link>{" "}
-              </Box>{" "}
-              <CustomButton text="Login" type="submit" />
+                  Forgot Password?
+                </Link>
+              </Box>
+
+              <CustomButton
+                text={loading ? "Logging in..." : "Login"}
+                type="submit"
+              />
+
               <Typography
                 variant="body2"
                 align="center"
                 sx={{ fontWeight: 400, fontSize: "16px", mt: 2 }}
               >
-                {" "}
                 Do not have account yet?{" "}
                 <Link
-                  href="/register"
+                  href="/signup"
                   underline="hover"
                   sx={{ fontWeight: 500, fontSize: "16px" }}
                 >
-                  {" "}
-                  Create new account{" "}
-                </Link>{" "}
-              </Typography>{" "}
-            </Box>{" "}
-          </Box>{" "}
-        </Grid>{" "}
-      </Grid>{" "}
+                  Create new account
+                </Link>
+              </Typography>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%", borderRadius: "8px" }}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

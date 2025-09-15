@@ -1,18 +1,26 @@
-
-import { Routes, Route } from "react-router-dom";
+import { Routes,Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import RequireAuth from "./routes/RequireAuth"; 
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Todos from "./pages/Todos";
+import Signup from "./pages/Register"; 
+import TodoPage from "./pages/Todos"; 
 
-function App() {
+export default function App() {
   return (
-    <Routes>
-      {/* Public UI routes only */}
-      <Route path="/" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/todo" element={<Todos />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* Protected routes */}
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<TodoPage />} />
+        </Route>
+
+        {/* Catch all - redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </AuthProvider>
   );
 }
-
-export default App;

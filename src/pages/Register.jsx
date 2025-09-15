@@ -1,8 +1,11 @@
 import { useState } from "react";
-import {Box,Grid,Typography,TextField,InputAdornment,IconButton,CssBaseline,FormControlLabel,Checkbox} from "@mui/material";
+import {Box,Grid,Typography,TextField,InputAdornment,IconButton,CssBaseline,FormControlLabel,Checkbox,Snackbar,Alert,
+} from "@mui/material";
 import {Email,Lock,Person,Visibility,VisibilityOff,} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import signupPicture from "../assets/signupPicture.png";
 import CustomButton from "../components/Button";
+import { signup } from "../services/auth";
 
 export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
@@ -12,17 +15,29 @@ export default function Signup() {
     email: "",
     password: "",
     confirmPassword: "",
+    remember: false,
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const navigate = useNavigate();
+
   const handleClickShowPassword = () => setShowPassword((s) => !s);
-  const handleClickShowConfirmPassword = () =>
-    setShowConfirmPassword((s) => !s);
-  
+  const handleClickShowConfirmPassword = () => setShowConfirmPassword((s) => !s);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
-  
+
   const validate = () => {
     let tempErrors = {};
     if (!formData.fullName) tempErrors.fullName = "Full name is required";
@@ -30,24 +45,59 @@ export default function Signup() {
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       tempErrors.email = "Email is invalid";
     if (!formData.password) tempErrors.password = "Password is required";
-    if (formData.password !== formData.confirmPassword)
+    if (!formData.confirmPassword)
+      tempErrors.confirmPassword = "Confirm password is required";
+    else if (formData.password !== formData.confirmPassword)
       tempErrors.confirmPassword = "Passwords do not match";
+    if (!formData.remember)
+      tempErrors.remember = "You must agree to the terms";
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) console.log("Signup submitted", formData);
+    if (!validate()) return;
+
+    try {
+      setLoading(true);
+      setErrors({});
+
+      await signup({
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      setSnackbar({
+        open: true,
+        message: "Registration successful! Redirecting to login...",
+        severity: "success",
+      });
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          err.message ||
+          "Signup failed",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-  
-  
+
   return (
     <Box sx={{ width: "100vw", height: "100vh", m: 0, p: 0 }}>
-      {" "}
-      <CssBaseline />{" "}
+      <CssBaseline />
       <Grid container sx={{ height: "100%" }}>
-        {" "}
-        {/* Left Section */}{" "}
+        {/* Left Section */}
         <Grid
           item
           xs={7}
@@ -61,7 +111,6 @@ export default function Signup() {
             width: "53%",
           }}
         >
-          {" "}
           <Box
             sx={{
               display: "flex",
@@ -72,7 +121,6 @@ export default function Signup() {
               px: 2,
             }}
           >
-            {" "}
             <Box
               component="img"
               src={signupPicture}
@@ -83,19 +131,18 @@ export default function Signup() {
                 mt: -3,
                 userSelect: "none",
               }}
-            />{" "}
+            />
             <Typography
               variant="body1"
               sx={{ mt: 0, mb: 0, p: 0, lineHeight: 1.4 }}
             >
-              {" "}
               Join us today and organize your tasks effortlessly. Create your
-              account and start managing to-dos right away.{" "}
-            </Typography>{" "}
-          </Box>{" "}
-        </Grid>{" "}
-       
-        {/* Right Section */}{" "}
+              account and start managing to-dos right away.
+            </Typography>
+          </Box>
+        </Grid>
+
+        {/* Right Section */}
         <Grid
           item
           xs={5}
@@ -106,16 +153,13 @@ export default function Signup() {
             pl: 13,
           }}
         >
-          {" "}
           <Box sx={{ width: "100%", maxWidth: "100%", p: 5 }}>
-            {" "}
             <Typography
               variant="h5"
               sx={{ position: "relative", bottom: 28, right: 130, pl: 2 }}
             >
-              {" "}
-              ToDo-App{" "}
-            </Typography>{" "}
+              ToDo-App
+            </Typography>
             <Typography
               variant="h6"
               sx={{
@@ -127,9 +171,8 @@ export default function Signup() {
                 color: "#000000",
               }}
             >
-              {" "}
-              Create new account{" "}
-            </Typography>{" "}
+              Create new account
+            </Typography>
             <Typography
               variant="body2"
               sx={{
@@ -141,13 +184,12 @@ export default function Signup() {
                 textAlign: "center",
               }}
             >
-              {" "}
-              Welcome! Please enter your details{" "}
-            </Typography>{" "}
+              Welcome! Please enter your details
+            </Typography>
+
             <Box component="form" onSubmit={handleSubmit}>
-              {" "}
+              {/* Full Name */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="fullName"
                   value={formData.fullName}
@@ -163,15 +205,15 @@ export default function Signup() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Person />{" "}
+                        <Person />
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
+                />
+              </Box>
+
+              {/* Email */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="email"
                   value={formData.email}
@@ -187,15 +229,15 @@ export default function Signup() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Email />{" "}
+                        <Email />
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
+                />
+              </Box>
+
+              {/* Password */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="password"
                   type={showPassword ? "text" : "password"}
@@ -212,31 +254,22 @@ export default function Signup() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Lock />{" "}
+                        <Lock />
                       </InputAdornment>
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
-                        {" "}
-                        <IconButton
-                          onClick={handleClickShowPassword}
-                          edge="end"
-                        >
-                          {" "}
-                          {showPassword ? (
-                            <VisibilityOff />
-                          ) : (
-                            <Visibility />
-                          )}{" "}
-                        </IconButton>{" "}
+                        <IconButton onClick={handleClickShowPassword} edge="end">
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
+                />
+              </Box>
+
+              {/* Confirm Password */}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                {" "}
                 <TextField
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
@@ -253,65 +286,84 @@ export default function Signup() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        {" "}
-                        <Lock />{" "}
+                        <Lock />
                       </InputAdornment>
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
-                        {" "}
                         <IconButton
                           onClick={handleClickShowConfirmPassword}
                           edge="end"
                         >
-                          {" "}
                           {showConfirmPassword ? (
                             <VisibilityOff />
                           ) : (
                             <Visibility />
-                          )}{" "}
-                        </IconButton>{" "}
+                          )}
+                        </IconButton>
                       </InputAdornment>
                     ),
                   }}
-                />{" "}
-              </Box>{" "}
-               <Box
-      sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      <FormControlLabel
-        control={
-          <Checkbox
-            name="remember"
-            checked={formData.remember}
-            onChange={handleChange}
-            sx={{
-              borderRadius: "4px",
-              transform: "scale(0.9)", 
-              padding: "5px",
-              ml: 1,
-            }}
-          />
-        }
-        label="Agree to our Terms and Conditions & Privacy Policy"
-        sx={{
-          "& .MuiFormControlLabel-label": {
-            fontSize: "14px", 
-            lineHeight: "20px",
-            fontWeight: 400,
-          },
-        }}
-      />
-    </Box>
-              <CustomButton text="Sign up" type="submit" />
-            </Box>{" "}
-          </Box>{" "}
-        </Grid>{" "}
-      </Grid>{" "}
+                />
+              </Box>
+
+              {/* Terms Checkbox */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      name="remember"
+                      checked={formData.remember}
+                      onChange={handleChange}
+                      sx={{
+                        borderRadius: "4px",
+                        transform: "scale(0.9)",
+                        padding: "5px",
+                        ml: 1,
+                      }}
+                    />
+                  }
+                  label="Agree to our Terms and Conditions & Privacy Policy"
+                  sx={{
+                    "& .MuiFormControlLabel-label": {
+                      fontSize: "14px",
+                      lineHeight: "20px",
+                      fontWeight: 400,
+                    },
+                  }}
+                />
+              </Box>
+
+              <CustomButton
+                text={loading ? "Signing up..." : "Sign up"}
+                type="submit"
+              />
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
+
+      {/* Snackbar for messages */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
